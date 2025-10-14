@@ -14,12 +14,10 @@ import { parseTailwindClassesWithBabel } from "../parser.core";
 import { formatClassGroups } from "../formatter.core";
 import {
   getClassNameNode,
-  getNonClassAttributes,
   getJSXWrappers,
   getIndentationLevels,
   formatWithPrettier,
   shouldFormatClassesMultiline,
-  getFormattedNonClassAttributes,
   getFormattedClasses,
   fixClassNameIndentation,
 } from "../../utils/formatter.utils";
@@ -176,57 +174,39 @@ function constructFormattedJSXElement(
 ): { start: number; end: number; replacement: string } {
   const elementLine =
     sourceText.slice(0, elementNode.start!).split("\n").pop() || "";
-  const elementPrefix = sourceText.slice(
-    elementNode.start!,
-    elementNode.name.end!
-  );
-  const elementSuffix = elementNode.selfClosing ? "/>" : ">";
 
   const { openingWrapper, closingWrapper } = getJSXWrappers(
     classNameNode.value
   );
-  const { baseIndent, attrIndent, classIndent } = getIndentationLevels(
+
+  const { classIndent } = getIndentationLevels(
     elementLine,
     formatterConfig.usesTabs,
     formatterConfig.tabSize
-  );
-
-  const classNameAttr = classNameNode.name.name;
-  const nonClassNameAttributes = getNonClassAttributes(elementNode);
-  const attributesText = nonClassNameAttributes.map((attr) =>
-    sourceText.slice(attr.start!, attr.end!).trim()
-  );
-  const formattedNonClassAttributes = getFormattedNonClassAttributes(
-    attributesText,
-    attrIndent
   );
 
   const formatClassesMultiline = shouldFormatClassesMultiline(
     classGroups,
     formatterConfig
   );
+
   const formattedClasses = getFormattedClasses(
     classGroups,
     classIndent,
     formatClassesMultiline
   );
 
-  /* Construct the formatted element string */
-  let formattedElementString = elementPrefix + formattedNonClassAttributes;
+  let replacement: string;
 
   if (!formatClassesMultiline) {
-    formattedElementString += `\n${attrIndent}${classNameAttr}=${openingWrapper}${formattedClasses}${closingWrapper}`;
+    replacement = `${openingWrapper}${formattedClasses}${closingWrapper}`;
   } else {
-    formattedElementString += `\n${attrIndent}${classNameAttr}=${openingWrapper}\n`;
-    formattedElementString += formattedClasses;
-    formattedElementString += `\n${attrIndent}${closingWrapper}`;
+    replacement = `${openingWrapper}\n${formattedClasses}\n${closingWrapper}`;
   }
 
-  formattedElementString += `\n${baseIndent}${elementSuffix}`;
-
   return {
-    start: elementNode.start!,
-    end: elementNode.end!,
-    replacement: formattedElementString,
+    start: classNameNode.value!.start!,
+    end: classNameNode.value!.end!,
+    replacement,
   };
 }

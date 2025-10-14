@@ -7,6 +7,7 @@
 import * as t from "@babel/types";
 import { FormatterConfig, ClassAttribute } from "../types";
 import { logger } from "../logger";
+import vscode from "vscode";
 
 /**
  * Gets the className node in a JSX element.
@@ -147,6 +148,15 @@ export function getIndentationLevels(
  * @param prettierConfig - Prettier configuration options
  * @returns Prettier-formatted text, or original text if formatting fails
  */
+
+const getProjectRoot = () => {
+  const active_text_editor = vscode.window.activeTextEditor!;
+  const file_uri = active_text_editor.document.uri;
+  const workspace_folder = vscode.workspace.getWorkspaceFolder(file_uri)!;
+
+  return workspace_folder.uri.fsPath;
+};
+
 export async function formatWithPrettier(
   text: string,
   prettierConfig: Record<string, any>
@@ -161,7 +171,12 @@ export async function formatWithPrettier(
 
         for (const pluginName of prettierConfig.plugins) {
           try {
-            const plugin = await import(pluginName);
+            const pluginPath = require.resolve(pluginName, {
+              paths: [getProjectRoot()],
+            });
+
+            const plugin = await import(pluginPath);
+
             loadedPlugins.push(plugin.default || plugin);
           } catch (error) {
             logger.warn(`Failed to load plugin ${pluginName}: ${error}`);

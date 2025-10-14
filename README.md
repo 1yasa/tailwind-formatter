@@ -1,3 +1,8 @@
+Folk from [Myhtica/tailwind-formatter](https://github.com/Myhtica/tailwind-formatter),fixed some edge cases:
+
+- fix: don`t handle JSX/TSX attributes
+- fix: resolve host prettier plugin path
+
 # Tailwind Formatter - Class Organization, Your Way
 
 Wrestling with messy class strings or opinionated formatting styles? Tailwind Formatter lets you enjoy neatly categorized, consistently formatted utility classes that make your code more readable and maintainable — _your way_.
@@ -224,7 +229,6 @@ Responsive classes (sm:, md:, lg:, etc.) are handled separately from categories 
 - `tailwindFormatter.viewports.breakpoints`: Define your breakpoint prefixes in order (e.g., ["sm", "md", "lg"])
 
 - `tailwindFormatter.viewports.grouping`: Choose how to group viewport-specific classes:
-
   - `"separate"` (default): Groups all classes for the same viewport together on one line
 
   - `"separate-categorized"`: Separates by viewport first, then applies category organization within each viewport group
