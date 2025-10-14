@@ -3,7 +3,9 @@ Folk from [Myhtica/tailwind-formatter](https://github.com/Myhtica/tailwind-forma
 - fix: don`t handle JSX/TSX attributes
 - fix: resolve host prettier plugin path
 
-# Tailwind Formatter - Class Organization, Your Way
+Search in vs code by 1yasa.tailwind-better-formatter
+
+# Tailwind Better Formatter - Class Organization, Your Way
 
 Wrestling with messy class strings or opinionated formatting styles? Tailwind Formatter lets you enjoy neatly categorized, consistently formatted utility classes that make your code more readable and maintainable — _your way_.
 
