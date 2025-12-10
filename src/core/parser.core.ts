@@ -20,126 +20,134 @@ import { ClassParseResult } from "../types";
  * @returns ClassParseResult object containing baseClasses, viewportClasses, and dynamicExpressions
  */
 export function parseTailwindClassesWithBabel(
-  classNameNode: t.JSXAttribute,
-  sourceText: string,
-  categories: Record<string, string>,
-  viewports: string[]
+      classNameNode: t.JSXAttribute,
+      sourceText: string,
+      categories: Record<string, string>,
+      viewports: string[]
 ): ClassParseResult {
-  const parsedClasses: ClassParseResult = {
-    baseClasses: [],
-    viewportClasses: {},
-    dynamicExpressions: [],
-  };
-  viewports.forEach((viewport) => {
-    parsedClasses.viewportClasses[viewport] = [];
-  });
-
-  const classNameValue = classNameNode.value;
-
-  if (t.isStringLiteral(classNameValue)) {
-    const classNameString = classNameValue.value;
-    processTailwindClasses(classNameString, parsedClasses, viewports);
-
-    return parsedClasses;
-  }
-
-  if (t.isJSXExpressionContainer(classNameValue)) {
-    const classNameExpression = classNameValue.expression;
-    const expressionText = sourceText.slice(
-      classNameExpression.start!,
-      classNameExpression.end!
-    );
-
-    if (
-      t.isCallExpression(classNameExpression) &&
-      t.isIdentifier(classNameExpression.callee)
-    ) {
-      classNameExpression.arguments.forEach((arg) => {
-        if (t.isStringLiteral(arg)) {
-          processTailwindClasses(arg.value, parsedClasses, viewports);
-        } else if (t.isConditionalExpression(arg)) {
-          const consequent = arg.consequent;
-          const alternate = arg.alternate;
-
-          if (t.isStringLiteral(consequent)) {
-            processTailwindClasses(consequent.value, parsedClasses, viewports);
-          }
-
-          if (t.isStringLiteral(alternate)) {
-            processTailwindClasses(alternate.value, parsedClasses, viewports);
-          }
-
-          parsedClasses.dynamicExpressions.push(
-            `\${${sourceText.slice(arg.start!, arg.end!)}}`
-          );
-        } else {
-          parsedClasses.dynamicExpressions.push(
-            sourceText.slice(arg.start!, arg.end!)
-          );
-        }
+      const parsedClasses: ClassParseResult = {
+            baseClasses: [],
+            viewportClasses: {},
+            dynamicExpressions: [],
+      };
+      viewports.forEach((viewport) => {
+            parsedClasses.viewportClasses[viewport] = [];
       });
 
-      return parsedClasses;
-    } else if (t.isTemplateLiteral(classNameExpression)) {
-      processTemplateLiteral(
-        classNameExpression,
-        sourceText,
-        parsedClasses,
-        categories,
-        viewports
-      );
-    } else if (
-      t.isConditionalExpression(classNameExpression) ||
-      t.isCallExpression(classNameExpression)
-    ) {
-      parsedClasses.dynamicExpressions.push(`\${${expressionText}}`);
+      const classNameValue = classNameNode.value;
 
-      if (t.isConditionalExpression(classNameExpression)) {
-        if (t.isStringLiteral(classNameExpression.consequent)) {
-          processTailwindClasses(
-            classNameExpression.consequent.value,
-            parsedClasses,
-            viewports
-          );
-        }
+      if (t.isStringLiteral(classNameValue)) {
+            const classNameString = classNameValue.value;
+            processTailwindClasses(classNameString, parsedClasses, viewports);
 
-        if (t.isStringLiteral(classNameExpression.alternate)) {
-          processTailwindClasses(
-            classNameExpression.alternate.value,
-            parsedClasses,
-            viewports
-          );
-        }
+            return parsedClasses;
       }
-    } else if (hasTailwindPrefix(expressionText, categories)) {
-      processTailwindClasses(expressionText, parsedClasses, viewports);
-    } else {
-      parsedClasses.dynamicExpressions.push(expressionText);
-    }
-  }
 
-  return parsedClasses;
+      if (t.isJSXExpressionContainer(classNameValue)) {
+            const classNameExpression = classNameValue.expression;
+            const expressionText = sourceText.slice(
+                  classNameExpression.start!,
+                  classNameExpression.end!
+            );
+
+            if (
+                  t.isCallExpression(classNameExpression) &&
+                  t.isIdentifier(classNameExpression.callee)
+            ) {
+                  classNameExpression.arguments.forEach((arg) => {
+                        if (t.isStringLiteral(arg)) {
+                              processTailwindClasses(arg.value, parsedClasses, viewports);
+                        } else if (t.isConditionalExpression(arg)) {
+                              const consequent = arg.consequent;
+                              const alternate = arg.alternate;
+
+                              if (t.isStringLiteral(consequent)) {
+                                    processTailwindClasses(
+                                          consequent.value,
+                                          parsedClasses,
+                                          viewports
+                                    );
+                              }
+
+                              if (t.isStringLiteral(alternate)) {
+                                    processTailwindClasses(
+                                          alternate.value,
+                                          parsedClasses,
+                                          viewports
+                                    );
+                              }
+
+                              parsedClasses.dynamicExpressions.push(
+                                    sourceText.slice(arg.start!, arg.end!)
+                              );
+                        } else {
+                              parsedClasses.dynamicExpressions.push(
+                                    sourceText.slice(arg.start!, arg.end!)
+                              );
+                        }
+                  });
+
+                  return parsedClasses;
+            } else if (t.isTemplateLiteral(classNameExpression)) {
+                  processTemplateLiteral(
+                        classNameExpression,
+                        sourceText,
+                        parsedClasses,
+                        categories,
+                        viewports
+                  );
+            } else if (
+                  t.isConditionalExpression(classNameExpression) ||
+                  t.isCallExpression(classNameExpression)
+            ) {
+                  parsedClasses.dynamicExpressions.push(`\${${expressionText}}`);
+
+                  if (t.isConditionalExpression(classNameExpression)) {
+                        if (t.isStringLiteral(classNameExpression.consequent)) {
+                              processTailwindClasses(
+                                    classNameExpression.consequent.value,
+                                    parsedClasses,
+                                    viewports
+                              );
+                        }
+
+                        if (t.isStringLiteral(classNameExpression.alternate)) {
+                              processTailwindClasses(
+                                    classNameExpression.alternate.value,
+                                    parsedClasses,
+                                    viewports
+                              );
+                        }
+                  }
+            } else if (hasTailwindPrefix(expressionText, categories)) {
+                  processTailwindClasses(expressionText, parsedClasses, viewports);
+            } else {
+                  parsedClasses.dynamicExpressions.push(expressionText);
+            }
+      }
+
+      return parsedClasses;
 }
 
 export function parseTailwindClassesWithRegex(
-  classNameString: string,
-  sourceText: string,
-  categories: Record<string, string>,
-  viewports: string[]
+      classNameString: string,
+      sourceText: string,
+      categories: Record<string, string>,
+      viewports: string[]
 ): ClassParseResult {
-  const parsedClasses: ClassParseResult = {
-    baseClasses: [],
-    viewportClasses: {},
-    dynamicExpressions: [],
-  };
-  viewports.forEach((viewport) => {
-    parsedClasses.viewportClasses[viewport] = [];
-  });
+      const parsedClasses: ClassParseResult = {
+            baseClasses: [],
+            viewportClasses: {},
+            dynamicExpressions: [],
+      };
+      viewports.forEach((viewport) => {
+            parsedClasses.viewportClasses[viewport] = [];
+      });
 
-  /* Only process static class names for regex */
-  processTailwindClasses(classNameString, parsedClasses, viewports);
+      /* Only process static class names for regex */
+      processTailwindClasses(classNameString, parsedClasses, viewports);
 
-  return parsedClasses;
+      return parsedClasses;
 }
 
 /**
@@ -150,21 +158,18 @@ export function parseTailwindClassesWithRegex(
  * @param categories - The Tailwind CSS categories and prefixes
  * @returns true if matched, false otherwise
  */
-function hasTailwindPrefix(
-  classString: string,
-  categories: Record<string, string>
-): boolean {
-  for (const [category, prefixString] of Object.entries(categories)) {
-    const prefixes = prefixString.split(" ");
+function hasTailwindPrefix(classString: string, categories: Record<string, string>): boolean {
+      for (const [category, prefixString] of Object.entries(categories)) {
+            const prefixes = prefixString.split(" ");
 
-    for (const prefix of prefixes) {
-      if (classString.startsWith(prefix)) {
-        return true;
+            for (const prefix of prefixes) {
+                  if (classString.startsWith(prefix)) {
+                        return true;
+                  }
+            }
       }
-    }
-  }
 
-  return false;
+      return false;
 }
 
 /**
@@ -178,23 +183,23 @@ function hasTailwindPrefix(
  * @param viewports - The list of viewport prefixes to check for
  */
 function processTailwindClasses(
-  classNameString: string,
-  parsedClasses: ClassParseResult,
-  viewports: string[]
+      classNameString: string,
+      parsedClasses: ClassParseResult,
+      viewports: string[]
 ): void {
-  /* Split by any whitespace (spaces, tabs, newlines) and remove empty entries */
-  const classes = classNameString.split(/\s+/).filter(Boolean);
+      /* Split by any whitespace (spaces, tabs, newlines) and remove empty entries */
+      const classes = classNameString.split(/\s+/).filter(Boolean);
 
-  classes.forEach((cls) => {
-    const viewportPrefix = viewports.find((v) => cls.startsWith(`${v}:`));
+      classes.forEach((cls) => {
+            const viewportPrefix = viewports.find((v) => cls.startsWith(`${v}:`));
 
-    if (viewportPrefix) {
-      const baseClass = cls.slice(viewportPrefix.length + 1);
-      parsedClasses.viewportClasses[viewportPrefix].push(baseClass);
-    } else {
-      parsedClasses.baseClasses.push(cls);
-    }
-  });
+            if (viewportPrefix) {
+                  const baseClass = cls.slice(viewportPrefix.length + 1);
+                  parsedClasses.viewportClasses[viewportPrefix].push(baseClass);
+            } else {
+                  parsedClasses.baseClasses.push(cls);
+            }
+      });
 }
 
 /**
@@ -209,61 +214,62 @@ function processTailwindClasses(
  * @param viewports - The list of viewport prefixes to check for
  */
 function processTemplateLiteral(
-  templateLiteral: t.TemplateLiteral,
-  sourceText: string,
-  parsedClasses: ClassParseResult,
-  categories: Record<string, string>,
-  viewports: string[]
+      templateLiteral: t.TemplateLiteral,
+      sourceText: string,
+      parsedClasses: ClassParseResult,
+      categories: Record<string, string>,
+      viewports: string[]
 ): void {
-  let currentClass = "";
+      let currentClass = "";
 
-  templateLiteral.quasis.forEach((quasi, index) => {
-    const quasiText = quasi.value.raw;
-    currentClass += quasiText;
+      templateLiteral.quasis.forEach((quasi, index) => {
+            const quasiText = quasi.value.raw;
+            currentClass += quasiText;
 
-    /* Check if an expression follows this quasi */
-    if (index < templateLiteral.expressions.length) {
-      const expression = templateLiteral.expressions[index];
-      const expressionText = sourceText.slice(
-        expression.start!,
-        expression.end!
-      );
+            /* Check if an expression follows this quasi */
+            if (index < templateLiteral.expressions.length) {
+                  const expression = templateLiteral.expressions[index];
+                  const expressionText = sourceText.slice(expression.start!, expression.end!);
 
-      if (
-        t.isConditionalExpression(expression) ||
-        t.isCallExpression(expression)
-      ) {
-        parsedClasses.dynamicExpressions.push(`\${${expressionText}}`);
-      } else {
-        currentClass += `\${${expressionText}}`;
-      }
-    }
+                  // if (t.isConditionalExpression(expression) || t.isCallExpression(expression)) {
+                  //       parsedClasses.dynamicExpressions.push(`\${${expressionText}}`);
+                  // } else {
+                  //       currentClass += `\${${expressionText}}`;
+                  // }
 
-    /*
-     * Handle class boundary detection:
-     *  - Space indicates natural class separation
-     *  - Last quasi needs processing even without space
-     */
-    const isLastQuasi = index === templateLiteral.quasis.length - 1;
-    if (quasiText.endsWith(" ") || isLastQuasi) {
-      currentClass = currentClass.trim();
+                  if (currentClass) {
+                        processTailwindClasses(currentClass, parsedClasses, viewports);
+                        currentClass = "";
+                  }
 
-      /* Check if class contains dynamic interpolation */
-      if (currentClass.includes("${")) {
-        const textBeforeInterpolation = currentClass.split("${")[0];
+                  parsedClasses.dynamicExpressions.push(`\${${expressionText}}`);
+            }
 
-        if (hasTailwindPrefix(textBeforeInterpolation, categories)) {
-          processTailwindClasses(currentClass, parsedClasses, viewports);
-        } else {
-          parsedClasses.dynamicExpressions.push(currentClass);
-        }
-      } else {
-        if (currentClass) {
-          processTailwindClasses(currentClass, parsedClasses, viewports);
-        }
-      }
+            /*
+             * Handle class boundary detection:
+             *  - Space indicates natural class separation
+             *  - Last quasi needs processing even without space
+             */
+            const isLastQuasi = index === templateLiteral.quasis.length - 1;
+            if (quasiText.endsWith(" ") || isLastQuasi) {
+                  currentClass = currentClass.trim();
 
-      currentClass = "";
-    }
-  });
+                  /* Check if class contains dynamic interpolation */
+                  if (currentClass.includes("${")) {
+                        const textBeforeInterpolation = currentClass.split("${")[0];
+
+                        if (hasTailwindPrefix(textBeforeInterpolation, categories)) {
+                              processTailwindClasses(currentClass, parsedClasses, viewports);
+                        } else {
+                              parsedClasses.dynamicExpressions.push(currentClass);
+                        }
+                  } else {
+                        if (currentClass) {
+                              processTailwindClasses(currentClass, parsedClasses, viewports);
+                        }
+                  }
+
+                  currentClass = "";
+            }
+      });
 }
