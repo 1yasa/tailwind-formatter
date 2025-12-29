@@ -103,10 +103,11 @@ export class FormatterConfigManager {
 
             const config = vscode.workspace.getConfiguration("tailwindFormatter");
 
+            const userCategories = config.get("classes.categories") as Record<string, string>;
+            const hasValidCategories = userCategories && Object.keys(userCategories).length > 0;
+
             this.staticConfig = {
-                  categories:
-                        (config.get("classes.categories") as Record<string, string>) ||
-                        default_categories,
+                  categories: hasValidCategories ? userCategories : default_categories,
                   uncategorizedPosition: config.get("classes.uncategorizedPosition") as
                         | "beforeCategorized"
                         | "afterCategorized",
